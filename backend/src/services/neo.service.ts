@@ -25,6 +25,11 @@ export class NeoService {
 
   async getTokenInfo(scriptHash: string): Promise<TokenInfo> {
     try {
+      // Validate scriptHash to prevent injection attacks
+      if (!this.isValidScriptHash(scriptHash)) {
+        throw new Error('Invalid script hash format');
+      }
+
       const [symbol, name, decimals, totalSupply] = await Promise.all([
         this.invokeFunction(scriptHash, 'symbol', []),
         this.invokeFunction(scriptHash, 'name', []),
@@ -47,9 +52,14 @@ export class NeoService {
 
   async getTokenHolders(scriptHash: string, limit: number = 100): Promise<AddressData[]> {
     try {
+      // Validate scriptHash to prevent request forgery
+      if (!this.isValidScriptHash(scriptHash)) {
+        throw new Error('Invalid script hash format');
+      }
+
       // Use Dora API to get token holders
       const response = await axios.get(
-        `${this.dora}/nep17/${scriptHash}/holders`,
+        `${this.dora}/nep17/${encodeURIComponent(scriptHash)}/holders`,
         {
           params: { limit, page: 1 },
           timeout: 30000,
@@ -82,6 +92,14 @@ export class NeoService {
 
   async getAddressBalance(address: string, scriptHash: string): Promise<string> {
     try {
+      // Validate inputs
+      if (!this.isValidNeoAddress(address)) {
+        throw new Error('Invalid Neo address format');
+      }
+      if (!this.isValidScriptHash(scriptHash)) {
+        throw new Error('Invalid script hash format');
+      }
+
       const result = await this.invokeFunction(scriptHash, 'balanceOf', [
         Neon.sc.ContractParam.hash160(address),
       ]);
@@ -98,8 +116,13 @@ export class NeoService {
     limit: number = 50
   ): Promise<TransactionFlow[]> {
     try {
+      // Validate address to prevent request forgery
+      if (!this.isValidNeoAddress(address)) {
+        throw new Error('Invalid Neo address format');
+      }
+
       const response = await axios.get(
-        `${this.dora}/address/${address}/transfers`,
+        `${this.dora}/address/${encodeURIComponent(address)}/transfers`,
         {
           params: { limit, page: 1 },
           timeout: 30000,
@@ -163,5 +186,21 @@ export class NeoService {
       default:
         return item.value || '';
     }
+  }
+
+  /**
+   * Validate Neo script hash format (0x prefixed hex string, 40 chars)
+   */
+  private isValidScriptHash(scriptHash: string): boolean {
+    const scriptHashRegex = /^0x[a-fA-F0-9]{40}$/;
+    return scriptHashRegex.test(scriptHash);
+  }
+
+  /**
+   * Validate Neo address format (Base58 encoded, starts with N, 34 chars)
+   */
+  private isValidNeoAddress(address: string): boolean {
+    const addressRegex = /^N[a-km-zA-HJ-NP-Z1-9]{33}$/;
+    return addressRegex.test(address);
   }
 }

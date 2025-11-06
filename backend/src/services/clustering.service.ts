@@ -64,11 +64,16 @@ export class ClusteringService {
 
   /**
    * Simple heuristic to identify contract addresses
+   * Note: This is a placeholder implementation. In production, you should:
+   * - Query the blockchain to check if the address is a deployed contract
+   * - Maintain a list of known contract addresses
+   * - Use pattern analysis on transaction behavior
    */
   private looksLikeContract(address: string): boolean {
-    // Neo contract addresses often have specific patterns
-    // This is a simplified check
-    return address.length === 34 && address.startsWith('N');
+    // For now, return false to avoid false positives
+    // All Neo addresses start with 'N' and are 34 chars, so we can't distinguish based on format alone
+    // This should be enhanced with actual contract verification via RPC
+    return false;
   }
 
   /**
