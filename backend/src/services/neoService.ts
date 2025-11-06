@@ -86,6 +86,12 @@ export class NeoService {
 
   async getTokenHolders(contractHash: string, limit: number = 100): Promise<TokenHolder[]> {
     try {
+      // Validate contract hash format (Neo N3 format: 0x followed by 40 hex chars)
+      if (!this.isValidContractHash(contractHash)) {
+        console.warn('Invalid contract hash format, using mock data');
+        return this.getMockTokenHolders(contractHash, limit);
+      }
+
       // Use Neo explorer API to get token holders
       const response = await axios.get(
         `${this.explorerApiUrl}/get_all_token_holders/${contractHash}`,
@@ -170,6 +176,12 @@ export class NeoService {
 
   async getTransactions(address: string, limit: number = 50): Promise<Transaction[]> {
     try {
+      // Validate address format (Neo N3 address format)
+      if (!this.isValidNeoAddress(address)) {
+        console.warn('Invalid Neo address format');
+        return [];
+      }
+
       const response = await axios.get(
         `${this.explorerApiUrl}/get_address_abstracts/${address}/1`,
         { timeout: 10000 }
@@ -211,6 +223,18 @@ export class NeoService {
     }
     
     return stackItem.value || '';
+  }
+
+  private isValidContractHash(contractHash: string): boolean {
+    // Neo N3 contract hash format: 0x followed by 40 hexadecimal characters
+    const contractHashPattern = /^0x[0-9a-fA-F]{40}$/;
+    return contractHashPattern.test(contractHash);
+  }
+
+  private isValidNeoAddress(address: string): boolean {
+    // Neo N3 address format: Starts with 'N' followed by 33 base58 characters
+    const addressPattern = /^N[1-9A-HJ-NP-Za-km-z]{33}$/;
+    return addressPattern.test(address);
   }
 
   async getBlockHeight(): Promise<number> {
