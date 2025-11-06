@@ -9,7 +9,7 @@
   "configurations": [
     {
       "name": "Backend: Dev",
-      "type": "pwa-node",
+      "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev:backend"],
@@ -28,7 +28,7 @@
     },
     {
       "name": "Backend: Attach",
-      "type": "pwa-node",
+      "type": "node",
       "request": "attach",
       "port": 9229,
       "restart": true,

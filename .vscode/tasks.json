@@ -30,7 +30,7 @@
         },
         "background": {
           "activeOnStart": true,
-          "beginsPattern": ".",
+          "beginsPattern": "Starting.*server",
           "endsPattern": "Server.*listening"
         }
       }
