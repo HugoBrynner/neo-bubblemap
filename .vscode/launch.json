@@ -20,14 +20,11 @@
     },
     {
       "name": "Frontend: Dev",
-      "type": "pwa-chrome",
+      "type": "chrome",
       "request": "launch",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev:frontend"],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
       "url": "http://localhost:5173",
-      "webRoot": "${workspaceFolder}/frontend"
+      "webRoot": "${workspaceFolder}/frontend",
+      "preLaunchTask": "npm: dev:frontend"
     },
     {
       "name": "Backend: Attach",
