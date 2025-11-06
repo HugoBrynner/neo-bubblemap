@@ -9,7 +9,7 @@ export class DataProcessor {
     tokenInfo: TokenInfo,
     maxBubbles: number = 100
   ): BubbleMapData {
-    const clusters = this.identifyClusters(holders, tokenInfo.totalSupply);
+    const clusters = this.identifyClusters(holders);
     const bubbles = this.createBubbles(holders, clusters, maxBubbles);
 
     return {
@@ -21,7 +21,7 @@ export class DataProcessor {
     };
   }
 
-  private identifyClusters(holders: TokenHolder[], totalSupply: number): AddressCluster[] {
+  private identifyClusters(holders: TokenHolder[]): AddressCluster[] {
     const clusters: AddressCluster[] = [];
     
     // Identify whales (holders with >1% of supply)
@@ -213,7 +213,7 @@ export class DataProcessor {
     };
   }
 
-  getClusterAnalysis(holders: TokenHolder[], totalSupply: number): ClusterAnalysis {
+  getClusterAnalysis(holders: TokenHolder[]): ClusterAnalysis {
     const whales = holders.filter(h => h.percentage >= this.WHALE_THRESHOLD);
     const exchanges = holders.filter(h => 
       this.EXCHANGE_PATTERNS.some(pattern => 

@@ -10,7 +10,7 @@ export class NeoService {
     this.explorerApiUrl = process.env.NEO_EXPLORER_API || 'https://api.neoscan.io/api/main_net/v1';
   }
 
-  async invokeFunction(contractHash: string, method: string, params: any[] = []): Promise<any> {
+  async invokeFunction(contractHash: string, method: string, params: unknown[] = []): Promise<unknown> {
     try {
       const response = await axios.post(this.rpcUrl, {
         jsonrpc: '2.0',
@@ -35,10 +35,10 @@ export class NeoService {
         this.invokeFunction(contractHash, 'totalSupply')
       ]);
 
-      const symbol = this.parseStackItem(symbolResult.stack[0]);
-      const name = this.parseStackItem(nameResult.stack[0]);
-      const decimals = parseInt(this.parseStackItem(decimalsResult.stack[0]));
-      const totalSupply = parseInt(this.parseStackItem(totalSupplyResult.stack[0]));
+      const symbol = this.parseStackItem((symbolResult as { stack: unknown[] }).stack[0]);
+      const name = this.parseStackItem((nameResult as { stack: unknown[] }).stack[0]);
+      const decimals = parseInt(this.parseStackItem((decimalsResult as { stack: unknown[] }).stack[0]));
+      const totalSupply = parseInt(this.parseStackItem((totalSupplyResult as { stack: unknown[] }).stack[0]));
 
       return {
         symbol,
@@ -93,10 +93,10 @@ export class NeoService {
       );
 
       if (response.data && Array.isArray(response.data)) {
-        const holders = response.data.slice(0, limit).map((holder: any) => ({
+        const holders = response.data.slice(0, limit).map((holder: { address: string; balance: string; percentage?: string; last_transaction_time?: number }) => ({
           address: holder.address,
           balance: parseFloat(holder.balance),
-          percentage: parseFloat(holder.percentage || 0),
+          percentage: parseFloat(holder.percentage || '0'),
           lastActivity: holder.last_transaction_time
         }));
         return holders;
@@ -176,7 +176,7 @@ export class NeoService {
       );
 
       if (response.data && response.data.entries) {
-        return response.data.entries.slice(0, limit).map((tx: any) => ({
+        return response.data.entries.slice(0, limit).map((tx: { txid: string; address_from: string; address_to: string; amount: string; time: number; asset: string }) => ({
           hash: tx.txid,
           from: tx.address_from,
           to: tx.address_to,
@@ -193,22 +193,24 @@ export class NeoService {
     }
   }
 
-  private parseStackItem(item: any): string {
+  private parseStackItem(item: unknown): string {
     if (!item) return '';
     
-    if (item.type === 'ByteString') {
+    const stackItem = item as { type?: string; value?: string };
+    
+    if (stackItem.type === 'ByteString') {
       // Convert hex string to UTF-8
-      const hex = item.value;
+      const hex = stackItem.value || '';
       try {
         return Buffer.from(hex, 'hex').toString('utf8');
       } catch {
         return hex;
       }
-    } else if (item.type === 'Integer') {
-      return item.value;
+    } else if (stackItem.type === 'Integer') {
+      return stackItem.value || '';
     }
     
-    return item.value || '';
+    return stackItem.value || '';
   }
 
   async getBlockHeight(): Promise<number> {

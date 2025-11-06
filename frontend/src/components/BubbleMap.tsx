@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { BubbleData } from '../types';
 
+interface BubbleNode extends BubbleData, d3.SimulationNodeDatum {}
+
 interface BubbleMapProps {
   data: BubbleData[];
   onBubbleClick?: (bubble: BubbleData) => void;
@@ -39,10 +41,11 @@ const BubbleMap: React.FC<BubbleMapProps> = ({
       .range(d3.schemeCategory10);
 
     // Create simulation
-    const simulation = d3.forceSimulation(data as any)
-      .force('charge', d3.forceManyBody().strength(-50))
-      .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('collision', d3.forceCollide().radius((d: any) => {
+    const bubbleNodes: BubbleNode[] = data.map(d => ({ ...d }));
+    const simulation = d3.forceSimulation<BubbleNode>(bubbleNodes)
+      .force('charge', d3.forceManyBody<BubbleNode>().strength(-50))
+      .force('center', d3.forceCenter<BubbleNode>(width / 2, height / 2))
+      .force('collision', d3.forceCollide<BubbleNode>().radius((d: BubbleNode) => {
         // Scale bubble size based on percentage
         const baseRadius = 5;
         const maxRadius = 80;
@@ -54,12 +57,12 @@ const BubbleMap: React.FC<BubbleMapProps> = ({
         const scale = (d.percentage - minPercentage) / (maxPercentage - minPercentage);
         return baseRadius + scale * (maxRadius - baseRadius);
       }))
-      .force('x', d3.forceX(width / 2).strength(0.05))
-      .force('y', d3.forceY(height / 2).strength(0.05));
+      .force('x', d3.forceX<BubbleNode>(width / 2).strength(0.05))
+      .force('y', d3.forceY<BubbleNode>(height / 2).strength(0.05));
 
     // Create bubbles
     const bubbles = g.selectAll('circle')
-      .data(data)
+      .data(bubbleNodes)
       .enter()
       .append('circle')
       .attr('r', (d) => {
@@ -105,7 +108,7 @@ const BubbleMap: React.FC<BubbleMapProps> = ({
         
         setTooltip({ visible: false, x: 0, y: 0, content: '' });
       })
-      .on('click', (event, d) => {
+      .on('click', (_event, d) => {
         if (onBubbleClick) {
           onBubbleClick(d);
         }
@@ -113,7 +116,7 @@ const BubbleMap: React.FC<BubbleMapProps> = ({
 
     // Add labels for large bubbles
     const labels = g.selectAll('text')
-      .data(data.filter(d => d.percentage > 1))
+      .data(bubbleNodes.filter(d => d.percentage > 1))
       .enter()
       .append('text')
       .attr('text-anchor', 'middle')
@@ -127,12 +130,12 @@ const BubbleMap: React.FC<BubbleMapProps> = ({
     // Update positions on simulation tick
     simulation.on('tick', () => {
       bubbles
-        .attr('cx', (d: any) => d.x)
-        .attr('cy', (d: any) => d.y);
+        .attr('cx', (d: BubbleNode) => d.x || 0)
+        .attr('cy', (d: BubbleNode) => d.y || 0);
       
       labels
-        .attr('x', (d: any) => d.x)
-        .attr('y', (d: any) => d.y);
+        .attr('x', (d: BubbleNode) => d.x || 0)
+        .attr('y', (d: BubbleNode) => d.y || 0);
     });
 
     // Add zoom behavior
@@ -142,7 +145,7 @@ const BubbleMap: React.FC<BubbleMapProps> = ({
         g.attr('transform', event.transform);
       });
 
-    svg.call(zoom as any);
+    svg.call(zoom);
 
     // Cleanup
     return () => {

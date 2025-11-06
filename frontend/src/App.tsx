@@ -27,6 +27,7 @@ const App: React.FC = () => {
     if (bubbleMapData) {
       applyFilters();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bubbleMapData, selectedClusters]);
 
   const loadTokenData = async (contractHash: string) => {

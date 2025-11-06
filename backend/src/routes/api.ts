@@ -125,7 +125,7 @@ router.get('/analysis/:contractHash', async (req: Request, res: Response) => {
     ]);
 
     const distribution = dataProcessor.analyzeDistribution(holders);
-    const clusterAnalysis = dataProcessor.getClusterAnalysis(holders, tokenInfo.totalSupply);
+    const clusterAnalysis = dataProcessor.getClusterAnalysis(holders);
 
     const result = {
       tokenInfo,
