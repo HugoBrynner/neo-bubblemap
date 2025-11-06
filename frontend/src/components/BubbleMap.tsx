@@ -86,13 +86,19 @@ const BubbleMap: React.FC<BubbleMapProps> = ({
           .attr('opacity', 1)
           .attr('stroke-width', 3);
         
-        const content = `
-          <strong>${d.label || 'Holder'}</strong><br/>
-          Address: ${d.address.substring(0, 10)}...<br/>
-          Balance: ${d.balance.toLocaleString()}<br/>
-          Percentage: ${d.percentage.toFixed(4)}%<br/>
-          ${d.clusterName ? `Cluster: ${d.clusterName}` : ''}
-        `;
+        // Build safe tooltip content
+        const parts = [
+          `<strong>${(d.label || 'Holder').replace(/[<>]/g, '')}</strong>`,
+          `Address: ${d.address.substring(0, 10).replace(/[<>]/g, '')}...`,
+          `Balance: ${d.balance.toLocaleString()}`,
+          `Percentage: ${d.percentage.toFixed(4)}%`
+        ];
+        
+        if (d.clusterName) {
+          parts.push(`Cluster: ${d.clusterName.replace(/[<>]/g, '')}`);
+        }
+        
+        const content = parts.join('<br/>');
         
         setTooltip({
           visible: true,

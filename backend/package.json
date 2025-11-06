@@ -16,7 +16,7 @@
     "analytics",
     "bubblemap"
   ],
-  "author": "",
+  "author": "Neo BubbleMap Contributors",
   "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
