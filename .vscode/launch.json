@@ -1,0 +1,41 @@
+{
+  "version": "0.2.0",
+  "compounds": [
+    {
+      "name": "Run Backend + Frontend",
+      "configurations": ["Backend: Dev", "Frontend: Dev"]
+    }
+  ],
+  "configurations": [
+    {
+      "name": "Backend: Dev",
+      "type": "pwa-node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev:backend"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "envFile": "${workspaceFolder}/backend/.env",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Frontend: Dev",
+      "type": "pwa-chrome",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev:frontend"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/frontend"
+    },
+    {
+      "name": "Backend: Attach",
+      "type": "pwa-node",
+      "request": "attach",
+      "port": 9229,
+      "restart": true,
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ]
+}
