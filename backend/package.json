@@ -1,0 +1,41 @@
+{
+  "name": "neo-bubblemap-backend",
+  "version": "1.0.0",
+  "description": "Backend API for Neo blockchain analytics and visualization",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "lint": "eslint . --ext .ts",
+    "test": "jest"
+  },
+  "keywords": [
+    "neo",
+    "blockchain",
+    "analytics",
+    "bubblemap"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.1",
+    "node-cache": "^5.1.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.17",
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.54.0",
+    "typescript": "^5.3.2",
+    "ts-node-dev": "^2.0.0",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.0",
+    "ts-jest": "^29.1.0"
+  }
+}

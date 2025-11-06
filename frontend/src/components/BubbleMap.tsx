@@ -1,0 +1,183 @@
+import React, { useEffect, useRef, useState } from 'react';
+import * as d3 from 'd3';
+import { BubbleData } from '../types';
+
+interface BubbleMapProps {
+  data: BubbleData[];
+  onBubbleClick?: (bubble: BubbleData) => void;
+  width?: number;
+  height?: number;
+}
+
+const BubbleMap: React.FC<BubbleMapProps> = ({
+  data,
+  onBubbleClick,
+  width = 1000,
+  height = 700
+}) => {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [tooltip, setTooltip] = useState<{
+    visible: boolean;
+    x: number;
+    y: number;
+    content: string;
+  }>({ visible: false, x: 0, y: 0, content: '' });
+
+  useEffect(() => {
+    if (!svgRef.current || !data.length) return;
+
+    // Clear previous visualization
+    d3.select(svgRef.current).selectAll('*').remove();
+
+    const svg = d3.select(svgRef.current);
+    const g = svg.append('g');
+
+    // Create color scale based on clusters
+    const clusterTypes = [...new Set(data.map(d => d.cluster || 'unknown'))];
+    const colorScale = d3.scaleOrdinal<string>()
+      .domain(clusterTypes)
+      .range(d3.schemeCategory10);
+
+    // Create simulation
+    const simulation = d3.forceSimulation(data as any)
+      .force('charge', d3.forceManyBody().strength(-50))
+      .force('center', d3.forceCenter(width / 2, height / 2))
+      .force('collision', d3.forceCollide().radius((d: any) => {
+        // Scale bubble size based on percentage
+        const baseRadius = 5;
+        const maxRadius = 80;
+        const minPercentage = Math.min(...data.map(b => b.percentage));
+        const maxPercentage = Math.max(...data.map(b => b.percentage));
+        
+        if (maxPercentage === minPercentage) return 20;
+        
+        const scale = (d.percentage - minPercentage) / (maxPercentage - minPercentage);
+        return baseRadius + scale * (maxRadius - baseRadius);
+      }))
+      .force('x', d3.forceX(width / 2).strength(0.05))
+      .force('y', d3.forceY(height / 2).strength(0.05));
+
+    // Create bubbles
+    const bubbles = g.selectAll('circle')
+      .data(data)
+      .enter()
+      .append('circle')
+      .attr('r', (d) => {
+        const baseRadius = 5;
+        const maxRadius = 80;
+        const minPercentage = Math.min(...data.map(b => b.percentage));
+        const maxPercentage = Math.max(...data.map(b => b.percentage));
+        
+        if (maxPercentage === minPercentage) return 20;
+        
+        const scale = (d.percentage - minPercentage) / (maxPercentage - minPercentage);
+        return baseRadius + scale * (maxRadius - baseRadius);
+      })
+      .attr('fill', d => colorScale(d.cluster || 'unknown'))
+      .attr('opacity', 0.7)
+      .attr('stroke', '#fff')
+      .attr('stroke-width', 2)
+      .style('cursor', 'pointer')
+      .on('mouseover', function(event, d) {
+        d3.select(this)
+          .attr('opacity', 1)
+          .attr('stroke-width', 3);
+        
+        const content = `
+          <strong>${d.label || 'Holder'}</strong><br/>
+          Address: ${d.address.substring(0, 10)}...<br/>
+          Balance: ${d.balance.toLocaleString()}<br/>
+          Percentage: ${d.percentage.toFixed(4)}%<br/>
+          ${d.clusterName ? `Cluster: ${d.clusterName}` : ''}
+        `;
+        
+        setTooltip({
+          visible: true,
+          x: event.pageX + 10,
+          y: event.pageY - 10,
+          content
+        });
+      })
+      .on('mouseout', function() {
+        d3.select(this)
+          .attr('opacity', 0.7)
+          .attr('stroke-width', 2);
+        
+        setTooltip({ visible: false, x: 0, y: 0, content: '' });
+      })
+      .on('click', (event, d) => {
+        if (onBubbleClick) {
+          onBubbleClick(d);
+        }
+      });
+
+    // Add labels for large bubbles
+    const labels = g.selectAll('text')
+      .data(data.filter(d => d.percentage > 1))
+      .enter()
+      .append('text')
+      .attr('text-anchor', 'middle')
+      .attr('dy', '.3em')
+      .style('font-size', '10px')
+      .style('font-weight', 'bold')
+      .style('fill', '#fff')
+      .style('pointer-events', 'none')
+      .text(d => d.label || '');
+
+    // Update positions on simulation tick
+    simulation.on('tick', () => {
+      bubbles
+        .attr('cx', (d: any) => d.x)
+        .attr('cy', (d: any) => d.y);
+      
+      labels
+        .attr('x', (d: any) => d.x)
+        .attr('y', (d: any) => d.y);
+    });
+
+    // Add zoom behavior
+    const zoom = d3.zoom<SVGSVGElement, unknown>()
+      .scaleExtent([0.5, 5])
+      .on('zoom', (event) => {
+        g.attr('transform', event.transform);
+      });
+
+    svg.call(zoom as any);
+
+    // Cleanup
+    return () => {
+      simulation.stop();
+    };
+  }, [data, width, height, onBubbleClick]);
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <svg
+        ref={svgRef}
+        width={width}
+        height={height}
+        style={{ border: '1px solid #ddd', background: '#f9f9f9' }}
+      />
+      {tooltip.visible && (
+        <div
+          style={{
+            position: 'fixed',
+            left: tooltip.x,
+            top: tooltip.y,
+            background: 'rgba(0, 0, 0, 0.8)',
+            color: 'white',
+            padding: '10px',
+            borderRadius: '5px',
+            pointerEvents: 'none',
+            fontSize: '12px',
+            zIndex: 1000,
+            maxWidth: '300px'
+          }}
+          dangerouslySetInnerHTML={{ __html: tooltip.content }}
+        />
+      )}
+    </div>
+  );
+};
+
+export default BubbleMap;

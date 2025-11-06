@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - NEO_RPC_URL=https://mainnet1.neo.coz.io:443
+      - NEO_EXPLORER_API=https://api.neoscan.io/api/main_net/v1
+    networks:
+      - neo-bubblemap-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - neo-bubblemap-network
+    restart: unless-stopped
+
+networks:
+  neo-bubblemap-network:
+    driver: bridge
