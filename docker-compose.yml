@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - NEO_RPC_URL=https://mainnet1.neo.coz.io:443
+      - NEO_NETWORK=mainnet
+      - CORS_ORIGIN=http://localhost
+      - CACHE_TIMEOUT=300
+    restart: unless-stopped
+    networks:
+      - neo-bubblemap
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - neo-bubblemap
+
+networks:
+  neo-bubblemap:
+    driver: bridge
